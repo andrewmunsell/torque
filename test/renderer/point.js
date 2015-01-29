@@ -115,3 +115,41 @@ test('get value for position', function() {
   v = renderer.getValueFor(tile, 0, 99, 255 - 3);
   equal(v, null);
 });
+
+test('check that gradients are appropriately indexed', function(){
+  function gradientKey(imf){
+    var hash = ""
+    for(var i = 0; i < imf.args.length; i++){
+      var rgb = imf.args[i].rgb;
+      hash += rgb[0] + ":" + rgb[1] + ":" + rgb[2];
+    }
+    return hash;
+  }
+  var CARTOCSS_1 = [
+    'Map {',
+    ' -torque-resolution: 1;',
+    '}',
+    '#layer {',
+    '  marker-fill: #662506;',
+    '  image-filters: colorize-alpha(blue, cyan, green, yellow , orange, red)',
+    '  marker-width: 4;',
+    '}'
+  ].join('\n');
+  renderer.setCartoCSS(CARTOCSS_1);
+  var layer = renderer._shader.getLayers()[1];
+  renderer.generateSprite(layer, 0, { zoom: 0 });
+  var CARTOCSS_2 = [
+    'Map {',
+    ' -torque-resolution: 1;',
+    '}',
+    '#layer {',
+    '  marker-fill: #662506;',
+    '  image-filters: colorize-alpha(blue, blue, cyan, blue)',
+    '  marker-width: 4;',
+    '}'
+  ].join('\n');
+  renderer.setCartoCSS(CARTOCSS_2);
+  layer = renderer._shader.getLayers()[1];
+  renderer.generateSprite(layer, 0, { zoom: 0 });
+  notEqual(renderer._gradients['this._gradients["0:0:2550:0:2550:255:2550:0:255"]'], undefined);
+});
